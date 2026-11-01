@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -137,7 +138,15 @@ async function TemplateDetailContent({ slug }: { slug: string }) {
       <Link className="back-link" href="/templates">← All templates</Link>
       <div className="detail-layout">
         <div className="detail-art detail-art-large preview-founder">
-          {previewUrl && <img alt={`${template.title} preview`} className="template-detail-preview" src={previewUrl} />}
+          {previewUrl && (
+            <Image
+              alt={`${template.title} preview`}
+              className="template-detail-preview"
+              fill
+              sizes="(max-width: 760px) 100vw, 55vw"
+              src={previewUrl}
+            />
+          )}
           <div className="detail-art-sheet">
             <span>{category?.name || "Template"} · FORM &amp; FIELD</span>
             <strong>{template.title}</strong>
