@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getAuthenticatedProfile, isAdminRole } from "@/lib/supabase/auth";
+import { getTemplateAssetLocation } from "@/lib/supabase/template-assets";
 
 async function requireAdmin() {
   const account = await getAuthenticatedProfile();
@@ -136,11 +137,17 @@ export async function deleteTemplateAction(formData: FormData) {
   if (error) throw new Error(`Unable to delete the template: ${error.message}`);
   if (!deleted) throw new Error("Unable to delete the template: no matching template was found.");
   refreshAdminAndStorefront();
-  const paths = [template?.file_path, template?.preview_image_path].filter(
-    (path): path is string => Boolean(path),
-  );
-  if (paths.length) {
-    const { error: storageError } = await account.supabase.storage.from("template-assets").remove(paths);
+  const assetLocations = [template?.file_path, template?.preview_image_path]
+    .filter((path): path is string => Boolean(path))
+    .map(getTemplateAssetLocation);
+  const buckets = new Map<string, string[]>();
+  for (const asset of assetLocations) {
+    const paths = buckets.get(asset.bucket) ?? [];
+    paths.push(asset.path);
+    buckets.set(asset.bucket, paths);
+  }
+  for (const [bucket, paths] of buckets) {
+    const { error: storageError } = await account.supabase.storage.from(bucket).remove(paths);
     if (storageError) throw new Error(`Template was deleted, but asset cleanup failed: ${storageError.message}`);
   }
 

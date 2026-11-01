@@ -4,7 +4,11 @@ import { Suspense } from "react";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getAuthenticatedProfile } from "@/lib/supabase/auth";
 import { createClient } from "@/lib/supabase/server";
-import { isMissingTemplateAssetColumns } from "@/lib/supabase/template-assets";
+import {
+  TEMPLATE_PREVIEWS_BUCKET,
+  getTemplateAssetLocation,
+  isMissingTemplateAssetColumns,
+} from "@/lib/supabase/template-assets";
 import { removeFavoriteAction, saveFavoriteAction } from "@/app/actions/customer";
 import { PageShell } from "../../components/site-chrome";
 import { ReviewForm } from "../review-form";
@@ -112,12 +116,20 @@ async function TemplateDetailContent({ slug }: { slug: string }) {
   }).format(price);
   let previewUrl: string | null = null;
   if (previewImagePath) {
-    const { data: preview, error: previewError } = await createAdminClient()
-      .storage.from("template-assets")
-      .createSignedUrl(previewImagePath, 300);
-    if (previewError) throw new Error(`Unable to load the template preview: ${previewError.message}`);
-    if (!preview?.signedUrl) throw new Error("Unable to load the template preview: no signed URL returned.");
-    previewUrl = preview.signedUrl;
+    const previewLocation = getTemplateAssetLocation(previewImagePath);
+    if (previewLocation.bucket === TEMPLATE_PREVIEWS_BUCKET) {
+      const { data } = await supabase.storage
+        .from(TEMPLATE_PREVIEWS_BUCKET)
+        .getPublicUrl(previewLocation.path);
+      previewUrl = data.publicUrl;
+    } else {
+      const { data: preview, error: previewError } = await createAdminClient()
+        .storage.from(previewLocation.bucket)
+        .createSignedUrl(previewLocation.path, 300);
+      if (previewError) throw new Error(`Unable to load the template preview: ${previewError.message}`);
+      if (!preview?.signedUrl) throw new Error("Unable to load the template preview: no signed URL returned.");
+      previewUrl = preview.signedUrl;
+    }
   }
 
   return (

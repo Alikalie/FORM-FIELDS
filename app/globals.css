@@ -657,6 +657,9 @@ button, input { font: inherit; }
 .policy-copy { max-width: 760px; padding-top: 24px; margin: 35px auto 0; border-top: 1px solid var(--line); }
 .policy-copy p { margin: 0 0 21px; color: #475569; font-size: 11px; line-height: 1.9; }
 .policy-copy strong { color: var(--foreground); }
+.policy-copy h2 { margin: 30px 0 12px; color: var(--foreground); font-family: var(--font-serif); font-size: 19px; }
+.policy-copy ul { padding-left: 22px; margin: 0 0 21px; color: #475569; font-size: 11px; line-height: 1.9; }
+.policy-copy li { padding-left: 3px; margin: 0 0 7px; }
 .about-page { max-width: 1000px; }
 .about-principles { max-width: 830px; margin: 48px auto 0; border-top: 1px solid var(--line); }
 .about-principles article { display: grid; grid-template-columns: 55px 1fr; gap: 18px; padding: 22px 0; border-bottom: 1px solid var(--line); }
@@ -668,6 +671,8 @@ button, input { font: inherit; }
 .account-notice { padding: 11px; margin: 0; background: #eff6ff; color: #1e3a8a; font-size: 10px; line-height: 1.6; }
 .account-switch { margin: 2px 0 0; color: #64748b; font-size: 10px; text-align: center; }
 .account-switch a { color: var(--primary); font-weight: 700; }
+.account-privacy-notice { margin: 16px 0 0; color: #64748b; font-size: 10px; line-height: 1.7; text-align: center; }
+.account-privacy-notice a { color: var(--primary); font-weight: 700; }
 .account-back { display: block; margin: 22px 0 0; text-align: center; }
 .information-section { max-width: 900px; }
 .information-card { max-width: 650px; padding: 27px; margin: 42px auto 0; border: 1px solid var(--line); background: #fff; text-align: center; }

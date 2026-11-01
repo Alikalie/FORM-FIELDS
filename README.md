@@ -18,6 +18,18 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
+## Supabase environment
+
+Configure `.env.local` with the Supabase project URL and publishable key:
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your-publishable-key
+SUPABASE_SERVICE_ROLE_KEY=your-server-only-service-role-key
+```
+
+The service-role key is only used by server-side code. Do not prefix it with `NEXT_PUBLIC_`, commit it, or expose it in browser code.
+
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
 ## Learn More
@@ -37,8 +49,8 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 
 ## Super Admin management setup
 
-Apply `supabase/migrations/20261030150000_admin_management.sql` to the Supabase project before using template uploads/downloads, review moderation, contact-message management, user account controls, or the site-content editor. The migration creates the private `template-assets` Storage bucket and its policies, and adds the `claim_free_template_download`, `record_paid_template_download`, and `record_template_download` RPCs used to enforce download access.
+Apply `supabase/migrations/20261030150000_admin_management.sql` and then `supabase/migrations/20261031132700_separate_template_storage_buckets.sql` to the Supabase project before using template uploads/downloads, review moderation, contact-message management, user account controls, or the site-content editor. The first migration creates the legacy private `template-assets` bucket and download RPCs. The second creates a private `template-files` bucket for downloadable documents and a public `template-previews` bucket for images. Existing assets in `template-assets` remain supported.
 
-Set `SUPABASE_SERVICE_ROLE_KEY` as a server-only environment variable for secure signed preview and download URLs. Never prefix this key with `NEXT_PUBLIC_` or expose it in browser code. Without it, those private asset operations intentionally fail rather than falling back to public access.
+Set `SUPABASE_SERVICE_ROLE_KEY` as a server-only environment variable for secure signed download URLs and legacy private preview URLs. Never prefix this key with `NEXT_PUBLIC_` or expose it in browser code. Private downloadable files use short-lived signed URLs; public preview images do not contain the downloadable template itself.
 
 The Site Content editor stores plain text in the Supabase `site_content.content` column. Homepage keys include `homepage.hero_title_prefix`, `homepage.hero_title_emphasis`, and `homepage.hero_description`; navigation keys include `navigation.templates`, `navigation.categories`, and `navigation.how_it_works`; footer keys use `footer.*`. Static page keys follow `<page>.<field>` (for example `about.title`, `terms.body`). FAQ items use `faq.items`, with one `topic | question | answer` entry per line. Contact topics are stored in the existing `contact_messages.subject` column.

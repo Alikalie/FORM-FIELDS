@@ -1,9 +1,11 @@
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
+import { connection } from "next/server";
 import { getAuthenticatedProfile, isAdminRole } from "@/lib/supabase/auth";
 import { AdminShell } from "../_components/admin-shell";
 
 async function AdminAccess({ children }: LayoutProps<"/admin">) {
+  await connection();
   const account = await getAuthenticatedProfile();
 
   if (!account || !account.isActive) redirect("/admin/login");

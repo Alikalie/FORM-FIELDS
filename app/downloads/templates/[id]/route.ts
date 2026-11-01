@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthenticatedProfile } from "@/lib/supabase/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { isMissingTemplateAssetColumns } from "@/lib/supabase/template-assets";
+import {
+  getTemplateAssetLocation,
+  isMissingTemplateAssetColumns,
+} from "@/lib/supabase/template-assets";
 
 export async function GET(
   request: NextRequest,
@@ -34,10 +37,11 @@ export async function GET(
 
   const fileExtension = template.file_path.split(".").at(-1)?.toLowerCase();
   const downloadName = `${template.title.replace(/[^a-zA-Z0-9._-]+/g, "-")}${fileExtension ? `.${fileExtension}` : ""}`;
+  const fileLocation = getTemplateAssetLocation(template.file_path);
   const adminClient = createAdminClient();
   const { data: signedFile, error: signingError } = await adminClient.storage
-    .from("template-assets")
-    .createSignedUrl(template.file_path, 60, {
+    .from(fileLocation.bucket)
+    .createSignedUrl(fileLocation.path, 60, {
       download: downloadName,
     });
 

@@ -44,7 +44,7 @@ export async function SiteContentManager({ section }: { section?: string } = {})
         <code>footer.social_instagram</code>, <code>footer.social_tiktok</code>,
         <code>footer.social_pinterest</code>, <code>footer.social_linkedin</code>, or
         <code>footer.social_youtube</code> and require an HTTPS URL. Page sections supported by the storefront include
-        homepage, about, faq, terms, privacy, refund-policy, how-it-works, contact, categories, and templates.
+        homepage, about, faq, terms, privacy, cookies, refund-policy, how-it-works, contact, categories, and templates.
         Most page sections use <code>page.eyebrow</code>, <code>page.title</code>, and
         <code>page.description</code>; longer content uses <code>page.body</code> or page-specific items.
       </p>

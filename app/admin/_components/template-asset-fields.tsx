@@ -2,17 +2,26 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/browser";
+import {
+  LEGACY_TEMPLATE_ASSETS_BUCKET,
+  TEMPLATE_FILES_BUCKET,
+  TEMPLATE_PREVIEWS_BUCKET,
+  getTemplateAssetLocation,
+} from "@/lib/supabase/template-assets";
 
-const allowedTypes = new Set([
+const allowedFileTypes = new Set([
   "application/pdf",
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
   "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+]);
+const allowedPreviewTypes = new Set([
   "image/jpeg",
   "image/png",
   "image/webp",
 ]);
-const maximumSize = 25 * 1024 * 1024;
+const maximumFileSize = 25 * 1024 * 1024;
+const maximumPreviewSize = 5 * 1024 * 1024;
 
 function safeFileName(name: string) {
   return name.replace(/[^a-zA-Z0-9._-]+/g, "-");
@@ -30,12 +39,18 @@ export function TemplateAssetFields({
   const [status, setStatus] = useState("");
 
   async function upload(file: File, kind: "files" | "previews") {
+    const allowedTypes = kind === "files" ? allowedFileTypes : allowedPreviewTypes;
+    const maximumSize = kind === "files" ? maximumFileSize : maximumPreviewSize;
     if (!allowedTypes.has(file.type)) {
-      setStatus("Select a PDF, DOCX, XLSX, PPTX, JPEG, PNG, or WebP file.");
+      setStatus(kind === "files"
+        ? "Select a PDF, DOCX, XLSX, or PPTX file."
+        : "Select a JPEG, PNG, or WebP preview image.");
       return;
     }
     if (file.size > maximumSize) {
-      setStatus("Files must be 25 MB or smaller.");
+      setStatus(kind === "files"
+        ? "Template files must be 25 MB or smaller."
+        : "Preview images must be 5 MB or smaller.");
       return;
     }
 
@@ -48,8 +63,9 @@ export function TemplateAssetFields({
     }
 
     const path = `${user.id}/${kind}/${crypto.randomUUID()}-${safeFileName(file.name)}`;
+    const bucket = kind === "files" ? TEMPLATE_FILES_BUCKET : TEMPLATE_PREVIEWS_BUCKET;
     const { error } = await supabase.storage
-      .from("template-assets")
+      .from(bucket)
       .upload(path, file, { contentType: file.type, upsert: false });
 
     if (error) {
@@ -57,9 +73,14 @@ export function TemplateAssetFields({
       return;
     }
 
-    if (kind === "files") setFilePath(path);
-    else setPreviewPath(path);
+    if (kind === "files") setFilePath(`${bucket}:${path}`);
+    else setPreviewPath(`${bucket}:${path}`);
     setStatus("Upload complete. Save the template to keep this asset attached.");
+  }
+
+  function getAssetLabel(value: string) {
+    const location = getTemplateAssetLocation(value);
+    return `${location.path.split("/").at(-1)}${location.bucket === LEGACY_TEMPLATE_ASSETS_BUCKET ? " (legacy private storage)" : ""}`;
   }
 
   return (
@@ -77,7 +98,7 @@ export function TemplateAssetFields({
         />
       </label>
       <input name="file_path" type="hidden" value={filePath} />
-      <p className="admin-form-help">{filePath ? `File attached: ${filePath.split("/").at(-1)}` : "No downloadable file attached."}</p>
+      <p className="admin-form-help">{filePath ? `File attached: ${getAssetLabel(filePath)}` : "No downloadable file attached."}</p>
       <label>
         Preview image (JPEG, PNG, WebP)
         <input
@@ -90,7 +111,7 @@ export function TemplateAssetFields({
         />
       </label>
       <input name="preview_image_path" type="hidden" value={previewPath} />
-      <p className="admin-form-help">{previewPath ? `Preview attached: ${previewPath.split("/").at(-1)}` : "No preview image attached."}</p>
+      <p className="admin-form-help">{previewPath ? `Preview attached: ${getAssetLabel(previewPath)}` : "No preview image attached."}</p>
       {status && <p className="admin-form-help" role="status">{status}</p>}
     </fieldset>
   );
